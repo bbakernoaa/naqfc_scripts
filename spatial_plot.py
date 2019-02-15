@@ -18,6 +18,8 @@ import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from glob import glob
 
+import dask
+
 
 '''
 Simple utility to convert nemsio file into a netCDF4 file
@@ -51,9 +53,11 @@ def load_paired_data(fname):
 
 
 def make_spatial_plot(da, proj):
+    from matplotlib.pyplot import savefig
     cbar_kwargs = dict(orientation='horizontal', pad=0.1, aspect=30)
     ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs,
                             map_kwarg={'states': True})
+    savefig(da.time.dt.strftime('test.%Y%m%d%H.jpg'), dpi=100)
 
 
 def scatter_obs(df):
@@ -97,11 +101,12 @@ def make_plots(finput, paired_data, variable, obs_variable, verbose, region, epa
     for index, var in enumerate(variable):
         obj = f[var]
         # loop over time
-        for t in obj.time:
-            ax = make_spatial_plot(obj.sel(time=t), proj)
-            if paired_data is not None:
-                ov = obs_variable[[index, 'latitude', 'longitude'].loc[obs_variable.time == t]
-                # ax.scatter()
+        plots = [dask.delayed(make_spatial_plot)(
+            obj.sel(time=t), proj) for t in obj.time]
+        dask.delayed(plots).compute()
+        # if paired_data is not None:
+        #     ov = obs_variable[[index, 'latitude', 'longitude'].loc[obs_variable.time == t]
+        # ax.scatter()
 
     print(variable)
 
