@@ -16,9 +16,11 @@ import os
 import subprocess
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from glob import glob
-
+import matplotlib as mpl
+mpl.use('agg')
+import matplotlib.pyplot as plt
 import dask
+import pandas as pd
 
 
 '''
@@ -47,18 +49,16 @@ def open_cmaq(finput):
 
 
 def load_paired_data(fname):
-    from dask import dataframe as dd
-    df = dd.read_hdf(fname)
-    return df
+    return pd.read_hdf(fname)
 
 
 def make_spatial_plot(da, proj):
-    from matplotlib.pyplot import savefig
-    cbar_kwargs = dict(orientation='horizontal', pad=0.1, aspect=30)
-    ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs,
-                            map_kwarg={'states': True})
-    savefig(da.time.dt.strftime('test.%Y%m%d%H.jpg'), dpi=100)
-
+    cbar_kwargs = dict(aspect=30)
+    ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs,figsize=(12,8), map_kwarg={'states': True,'crs':proj})
+    date = pd.Timestamp(da.time.values)
+    plt.tight_layout()
+    plt.savefig(date.strftime('naqfc_' +da.name + 'sp.%Y%m%d%H.jpg'), dpi=100)
+    plt.close()
 
 def scatter_obs(df):
     from matplotlib.pyplot import gcf
@@ -92,18 +92,23 @@ def spatial_scatter(df, col='OZONE'):
 def make_plots(finput, paired_data, variable, obs_variable, verbose, region, epa_region):
 
     # open the files
+    print(finput)
     f = open_cmaq(finput)
+    print(f)
     # get map projection
     proj = map_projection(f)
     if paired_data is not None:
         df = load_paired_data(paired_data)
     # loop over varaible list
+    plots = []
     for index, var in enumerate(variable):
         obj = f[var]
         # loop over time
-        plots = [dask.delayed(make_spatial_plot)(
-            obj.sel(time=t), proj) for t in obj.time]
-        dask.delayed(plots).compute()
+        for t in obj.time:
+            plots.append(dask.delayed(make_spatial_plot)(obj.sel(time=t), proj))
+#        plots dask.delayed(make_spatial_plot)(
+#            obj.sel(time=t), proj) for t in obj.time]
+    dask.delayed(plots).compute()
         # if paired_data is not None:
         #     ov = obs_variable[[index, 'latitude', 'longitude'].loc[obs_variable.time == t]
         # ax.scatter()
@@ -134,7 +139,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--output_name', help='Output base name',
                         type=str, required=False)
     parser.add_argument('-s', '--suppress_xwindow', help='Suppress X Window',
-                        type=bool, action='store_true' required=False)
+                        action='store_true', required=False)
     args = parser.parse_args()
 
     finput = args.files
