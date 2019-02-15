@@ -16,16 +16,17 @@ import os
 import subprocess
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-import matplotlib as mpl
-mpl.use('agg')
-import matplotlib.pyplot as plt
+
 import dask
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import pandas as pd
+
+mpl.use('agg')
 
 
 '''
-Simple utility to convert nemsio file into a netCDF4 file
-Utilizes mkgfsnemsioctl utility from NWPROD and CDO
+Simple utility to make spatial plots from the NAQFC forecast and overlay observations
 '''
 
 
@@ -52,13 +53,22 @@ def load_paired_data(fname):
     return pd.read_hdf(fname)
 
 
-def make_spatial_plot(da, proj):
+def make_spatial_plot(da, df, proj):
     cbar_kwargs = dict(aspect=30)
-    ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs,figsize=(12,8), map_kwarg={'states': True,'crs':proj})
+    ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs, figsize=(
+        12, 8), map_kwarg={'states': True, 'crs': proj})
     date = pd.Timestamp(da.time.values)
+    cbar = ax.figure[1]
+    vmin, vmax = cbar.get_ybound()
+    vars = df.keys()
+    varname = [x for x in vars if x not 'latitude' and if x not 'longitude'][0]
+    plt.scatter(df.longitude, df.latitude, c=df[varname], s=20, edgecolors='w',
+                linewidths=.05, ax=ax, vmin=vmin, vmax=vmax, cmap='viridis')
     plt.tight_layout()
-    plt.savefig(date.strftime('naqfc_' +da.name + 'sp.%Y%m%d%H.jpg'), dpi=100)
+    plt.savefig(date.strftime(
+        'naqfc_' + da.name + '_sp.%Y%m%d%H.jpg'), dpi=100)
     plt.close()
+
 
 def scatter_obs(df):
     from matplotlib.pyplot import gcf
@@ -105,13 +115,14 @@ def make_plots(finput, paired_data, variable, obs_variable, verbose, region, epa
         obj = f[var]
         # loop over time
         for t in obj.time:
-            plots.append(dask.delayed(make_spatial_plot)(obj.sel(time=t), proj))
+            plots.append(dask.delayed(make_spatial_plot)
+                         (obj.sel(time=t), proj))
 #        plots dask.delayed(make_spatial_plot)(
 #            obj.sel(time=t), proj) for t in obj.time]
     dask.delayed(plots).compute()
-        # if paired_data is not None:
-        #     ov = obs_variable[[index, 'latitude', 'longitude'].loc[obs_variable.time == t]
-        # ax.scatter()
+    # if paired_data is not None:
+    #     ov = obs_variable[[index, 'latitude', 'longitude'].loc[obs_variable.time == t]
+    # ax.scatter()
 
     print(variable)
 
