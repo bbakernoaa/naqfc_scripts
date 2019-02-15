@@ -16,7 +16,6 @@ import os
 import subprocess
 import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from distutils.spawn import find_executable
 from glob import glob
 
 
