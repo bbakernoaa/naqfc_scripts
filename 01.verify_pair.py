@@ -95,6 +95,7 @@ if __name__ == '__main__':
        mapping_table = {'OZONE':'O3', 'PM2.5':'PM25_TOT', 'PM10':'PMC_TOT'}
        sub_map = {i: mapping_table[i] for i in species if i in mapping_table}
        dfpair=pair_point(da,df,sub_map,interp)
+       print(dfpair)
        dfpair.to_csv('out_dfpair.csv')
     
 
