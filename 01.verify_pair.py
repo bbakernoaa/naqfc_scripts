@@ -1,4 +1,4 @@
-#!/home/patrickc/anaconda3/envs/monet/bin/python
+#!/usr/bin/env python
 
 __author__  = 'Patrick Campbell'
 __email__   = 'patrick.c.campbell@noaa.gov'
@@ -11,8 +11,8 @@ __license__ = 'GPL'
 import os
 from glob import glob
 import sys
-sys.path.append('/home/patrickc/MONET/')
-os.chdir('/home/patrickc/MONET/scripts/')
+#sys.path.append('/home/patrickc/MONET/')
+#os.chdir('/home/patrickc/MONET/scripts/')
 
 import subprocess
 from distutils.spawn import find_executable
@@ -39,7 +39,8 @@ def  get_airnow(start,end,datapath=None,verbose=False):
      monet.obs.airnow.datadir=datapath
      dfairnow = monet.obs.airnow.add_data(dates)
      dfwide   = long_to_wide(dfairnow)
-     return dfwide
+     #make sure there are no duplicates
+     return dfwide.drop_duplicates(subset=['time','siteid'])
 
 def  open_cmaq(finput,verbose=False):
      dset=monet.models.cmaq.open_mfdataset(finput)
@@ -49,10 +50,10 @@ def  open_cmaq(finput,verbose=False):
 if __name__ == '__main__':
 
     parser = ArgumentParser(description='pairs cmaq model data to aqs observations', formatter_class=ArgumentDefaultsHelpFormatter)
- 
+    
     parser.add_argument('-f', '--files',       help='string input model file directory/names', type=str, required=True)
-    parser.add_argument('-s', '--startdates',  help='string input start date for pairing YYYY-MM-DD HH:MM:SS', type=str, required=True)
-    parser.add_argument('-e', '--enddates',    help='string input end date for pairing YYYY-MM-DD HH:MM:SS', type=str, required=True)
+#    parser.add_argument('-s', '--startdates',  help='string input start date for pairing YYYY-MM-DD HH:MM:SS', type=str, required=True)
+#    parser.add_argument('-e', '--enddates',    help='string input end date for pairing YYYY-MM-DD HH:MM:SS', type=str, required=True)
     parser.add_argument('-x', '--species',     help='string input for obs species-variables to pair',type=str,nargs='+', required=False, default=['OZONE','PM2.5'])
     parser.add_argument('-o', '--output',      help='string output path for paired dataframe, stats, plots', type=str, required=False,default='./')
     parser.add_argument('-p', '--path',        help='string path to director of network observations', type=str, required=False, default='/data/aqf2/barryb/5xpm/AQS_DATA/')
@@ -63,8 +64,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     finput  = args.files
-    start   = args.startdates
-    end     = args.enddates 
+#    start   = args.startdates
+#    end     = args.enddates 
     species = args.species
     output  = args.output
     datapath= args.path
@@ -72,39 +73,41 @@ if __name__ == '__main__':
     model   = args.model
     interp  = args.interp
     verbose = args.verbose
-#reads model output (cmaq default)
+    #reads model output (cmaq default)
 
     if model == 'cmaq':
-    	da=open_cmaq(finput,verbose=verbose)  
+    	 da=open_cmaq(finput,verbose=verbose)  
     else:
-        print('Must enter cmaq model right now')
-        raise RuntimeError
+         print('Must enter cmaq model right now')
+         raise RuntimeError
 
 #retrieves data observations and formats pandas dataframe (airnow default)
     if network == 'airnow':
-        df=get_airnow(start,end,datapath)
+         start = da.time.to_index()[0]
+         end = da.time.to_index()[1]
+         df=get_airnow(start,end,datapath)
     elif network == 'aqs':
-        df=get_aqs(start,end,datapath,species)
+         df=get_aqs(start,end,datapath,species)
     else:
-        print('Must enter airnow or aqs right now')
-        raise RuntimeError
-
-#pairs surface point-type observations with 2D model parameters
-
+         print('Must enter airnow or aqs right now')
+         raise RuntimeError
+    
+    #pairs surface point-type observations with 2D model parameters
+    
     if network == 'airnow' and model == 'cmaq': 
-       mapping_table = {'OZONE':'O3', 'PM2.5':'PM25_TOT', 'PM10':'PMC_TOT'}
-       sub_map = {i: mapping_table[i] for i in species if i in mapping_table}
-       dfpair=pair_point(da,df,sub_map,interp)
-       print(dfpair)
-       dfpair.to_csv('out_dfpair.csv')
-    
-
+         mapping_table = {'OZONE':'O3', 'PM2.5':'PM25_TOT', 'PM10':'PMC_TOT'}
+         sub_map = {i: mapping_table[i] for i in species if i in mapping_table}
+         dfpair=pair_point(da,df,sub_map,interp)
+         print(dfpair)
+         dfpair.to_csv('out_dfpair.csv')
+         
+         
     else:
-        print('Must pair airnow right now')
-        raise RuntimeError
+         print('Must pair airnow right now')
+         raise RuntimeError
     
-
+    
     sys.exit(0)
-
+    
 
 
