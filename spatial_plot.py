@@ -21,7 +21,7 @@ import dask
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import cartopy.crs as ccrs
 mpl.use('agg')
 
 
@@ -52,59 +52,42 @@ def open_cmaq(finput):
 def load_paired_data(fname):
     return pd.read_hdf(fname)
 
-
-def make_spatial_plot(da, df, proj):
-    cbar_kwargs = dict(aspect=30)
-    ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs, figsize=(
-        12, 8), map_kwarg={'states': True, 'crs': proj})
-    date = pd.Timestamp(da.time.values)
-    cbar = ax.figure[1]
-    vmin, vmax = cbar.get_ybound()
-    vars = df.keys()
-    varname = [x for x in vars if x not 'latitude' and if x not 'longitude'][0]
-    plt.scatter(df.longitude, df.latitude, c=df[varname], s=20, edgecolors='w',
-                linewidths=.05, ax=ax, vmin=vmin, vmax=vmax, cmap='viridis')
-    plt.tight_layout()
-    plt.savefig(date.strftime(
-        'naqfc_' + da.name + '_sp.%Y%m%d%H.jpg'), dpi=100)
+def make_spatial_plot(da, df, proj): 
+    cbar_kwargs = dict(aspect=30,shrink=.8)#dict(aspect=30)                       
+    extent = [da.longitude.min().values+1,da.longitude.max().values-10,da.latitude.min().values+3,da.latitude.max().values-4] 
+    ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs, figsize=(15, 8), map_kwarg={'states': True, 'crs': proj,'extent':extent},robust=True) 
+    plt.gcf().canvas.draw() 
+    plt.tight_layout(pad=-1) 
+    date = pd.Timestamp(da.time.values) 
+    cbar = ax.figure.get_axes()[1] 
+    vmin, vmax = cbar.get_ybound() 
+    vars = df.keys() 
+    varname = [x for x in vars if x not in ['latitude','longitude']][0] 
+    ax.scatter(df.longitude.values,df.latitude.values,s=25,c=df[varname],transform=ccrs.PlateCarree(),edgecolor='w',linewidth=.08,vmin=vmin,vmax=vmax) 
+    ax.set_extent(extent,crs=ccrs.PlateCarree())
+    plt.savefig(date.strftime('naqfc_' + da.name + '_sp.%Y%m%d%H.jpg'), dpi=100)
     plt.close()
 
-
-def scatter_obs(df):
-    from matplotlib.pyplot import gcf
-    cf = gcf()
-    cbar = cf.get_axes()[1]
-
-
-def spatial_scatter(df, col='OZONE'):
-    from matplotlib.pyplot import gcf, scatter
-    cf = gcf()
-    cbar = cf.get_axes()[1]
-    s = 25
-    scatter(df.longitude, df.latitude, c=df[col], s=s)
-#     from .colorbars import cmap_discretize
-#     x, y = m(df.longitude.values, df.Latitude.values)
-#     s = 20
-#     if create_cbar:
-#         if discrete:
-#             cmap = cmap_discretize(cmap, ncolors)
-#             # s = 20
-#           if (type(plotargs(vmin)) == None) | (type(plotargs(vmax)) == None):
-#                 plt.scatter(x, y, c=df['Obs'].values, **plotargs)
-#             else:
-#                 plt.scatter(x, y, c=df['Obs'].values, **plotargs)
-#         else:
-#             plt.scatter(x, y, c=df['Obs'].values, **plotargs)
-#     else:
-#         plt.scatter(x, y, c=df['Obs'].values, **plotargs)
-
+# def make_spatial_plot(da, df, proj):
+#     cbar_kwargs = dict(aspect=30,shrink=.8)#dict(aspect=30)
+#     ax = da.monet.quick_map(cbar_kwargs=cbar_kwargs, figsize=(
+#         12, 8), map_kwarg={'states': True, 'crs': proj})
+#     date = pd.Timestamp(da.time.values)
+#     cbar = ax.figure.get_axes()[1]
+#     vmin, vmax = cbar.get_ybound()
+#     vars = df.keys()
+#     varname = [x for x in vars if x not in ['latitude','longitude']][0]
+#     print(varname)
+#     ax.scatter(df.longitude, df.latitude, c=df[varname])
+#     plt.tight_layout()
+#     plt.savefig(date.strftime(
+#         'naqfc_' + da.name + '_sp.%Y%m%d%H.jpg'), dpi=100)
+#     plt.close()
 
 def make_plots(finput, paired_data, variable, obs_variable, verbose, region, epa_region):
 
     # open the files
-    print(finput)
     f = open_cmaq(finput)
-    print(f)
     # get map projection
     proj = map_projection(f)
     if paired_data is not None:
@@ -115,11 +98,15 @@ def make_plots(finput, paired_data, variable, obs_variable, verbose, region, epa
         obj = f[var]
         # loop over time
         for t in obj.time:
-            plots.append(dask.delayed(make_spatial_plot)
-                         (obj.sel(time=t), proj))
+            date = pd.Timestamp(t.values)
+            print(date)
+            odf = df.loc[df.time == pd.Timestamp(t.values),['latitude','longitude',obs_variable[index]]]
+            make_spatial_plot(obj.sel(time=t), odf, proj)
+#            plots.append(dask.delayed(make_spatial_plot)
+#                         (obj.sel(time=t), odf, proj))
 #        plots dask.delayed(make_spatial_plot)(
 #            obj.sel(time=t), proj) for t in obj.time]
-    dask.delayed(plots).compute()
+#    dask.delayed(plots).compute()
     # if paired_data is not None:
     #     ov = obs_variable[[index, 'latitude', 'longitude'].loc[obs_variable.time == t]
     # ax.scatter()
