@@ -180,12 +180,6 @@ if __name__ == '__main__':
         help='input file names',
         required=False)
     parser.add_argument(
-        '-vb',
-        '--verbose',
-        help='print debugging information',
-        action='store_true',
-        required=False)
-    parser.add_argument(
         '-r',
         '--region',
         help='GIORGI Region ACRONYM',
@@ -212,7 +206,6 @@ if __name__ == '__main__':
     paired_data = args.paired_data
     variable = args.variable
     obs_variable = args.obs_variable
-    verbose = args.verbose
     out_name = args.output_name
     daily = args.daily
     if args.region is None:
@@ -240,4 +233,4 @@ if __name__ == '__main__':
     outname = "{}.{}".format(out_name, region)
 
     # make the plots
-    make_plots(ds, df, variable, obs_variable, verbose, outname)
+    make_plots(ds, df, variable, obs_variable, outname)
