@@ -79,7 +79,7 @@ def make_spatial_plot(da, df, out_name):
             cmap='plasma',
             ax=ax)
     plt.tight_layout(pad=0)
-    savename = "{}.{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
+    savename = "{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
     monet.plots.savefig(savename, dpi=100)
     plt.close()
 
