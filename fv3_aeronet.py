@@ -106,6 +106,8 @@ def make_plots(f, df, variable, obs_variable, out_name):
             if df is not None:
                 odf = df.loc[df.time == pd.Timestamp(t.values),
                              ['latitude', 'longitude', obs_variable[index]]]
+            else:
+                odf = None
             name = "{}.{}".format(out_name, obj.name)
             make_spatial_plot(obj.sel(time=t), odf, name)
             if df is not None:
