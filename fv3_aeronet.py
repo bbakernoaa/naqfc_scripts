@@ -52,7 +52,7 @@ def load_paired_data(fname):
 
 def make_spatial_plot(da, df, out_name):
     cbar_kwargs = dict(
-        aspect=30, shrink=.8, orientation='horizontal')  # dict(aspect=30)
+        aspect=20, shrink=.8, orientation='horizontal')  # dict(aspect=30)
     levels = [
         0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
         2.5
