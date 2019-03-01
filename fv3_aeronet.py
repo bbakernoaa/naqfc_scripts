@@ -58,7 +58,7 @@ def make_spatial_plot(da, df, out_name):
         cbar_kwargs=cbar_kwargs,
         figsize=(11.31, 7.67),
         levels=levels,
-        cmap='plasma')  # robust=True)
+        cmap='cividis')  # robust=True)
     date = pd.Timestamp(da.time.values)
     if df is not None:
         cbar = ax.figure.get_axes()[1]
@@ -80,6 +80,7 @@ def make_spatial_plot(da, df, out_name):
             ax=ax)
     plt.tight_layout(pad=0)
     savename = "{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
+    print(savename)
     monet.plots.savefig(savename, dpi=100)
     plt.close()
 
@@ -90,6 +91,7 @@ def make_spatial_bias_plot(df, out_name, **kwargs):
     plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
     plt.tight_layout(pad=0)
     savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
+    print(savename)
     monet.plots.savefig(savename, dpi=100, decorate=True)
     plt.close()
 
@@ -102,7 +104,7 @@ def make_plots(f, df, variable, obs_variable, out_name):
         # loop over time
         for t in obj.time:
             date = pd.Timestamp(t.values)
-            print(date)
+            print('Creating Plot:', var, 'at time:', date)
             if df is not None:
                 odf = df.loc[df.time == pd.Timestamp(t.values),
                              ['latitude', 'longitude', obs_variable[index]]]
