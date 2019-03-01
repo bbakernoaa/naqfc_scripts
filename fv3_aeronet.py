@@ -104,6 +104,9 @@ def make_plots(f, df, variable, obs_variable, out_name):
         # loop over time
         for t in obj.time:
             date = pd.Timestamp(t.values)
+            print(
+                "##########################################################################"
+            )
             print('Creating Plot:', var, 'at time:', date)
             if df is not None:
                 odf = df.loc[df.time == pd.Timestamp(t.values),
