@@ -22,8 +22,11 @@ import dask
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 import monet
+
+sns.set_context('notebook')
 
 plt.ioff()
 '''
