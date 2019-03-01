@@ -81,7 +81,7 @@ def make_spatial_plot(da, df, out_name):
     plt.tight_layout(pad=0)
     savename = "{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
     print(savename)
-    monet.plots.savefig(savename, dpi=100)
+    monet.plots.savefig(savename, dpi=100, decorate=True)
     plt.close()
 
 
