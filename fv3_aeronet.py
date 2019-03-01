@@ -214,6 +214,7 @@ if __name__ == '__main__':
     obs_variable = args.obs_variable
     verbose = args.verbose
     out_name = args.output_name
+    daily = args.daily
     if args.region is None:
         region = None
     else:
