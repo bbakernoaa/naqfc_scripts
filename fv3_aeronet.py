@@ -159,6 +159,7 @@ def get_region(obj, region):
     if region.lower() == 'global':
         return obj
     else:
+        print(region.upper())
         latmin, lonmin, latmax, lonmax, acro = ggrb(acronym=region.upper())
         out = obj.monet.window(
             lat_min=latmin, lon_min=lonmin, lat_max=latmax, lon_max=lonmax)
