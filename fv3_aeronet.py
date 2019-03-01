@@ -26,8 +26,6 @@ import pandas as pd
 import monet
 
 plt.ioff()
-
-
 '''
 Simple utility to make spatial plots from the NAQFC forecast and overlay observations
 '''
@@ -50,12 +48,17 @@ def load_paired_data(fname):
 
 
 def make_spatial_plot(da, df, out_name):
-    cbar_kwargs = dict(aspect=30, shrink=.8,
-                       orientation='horizontal')  # dict(aspect=30)
-    levels = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
-              0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2, 2.5]
-    ax = da.where(da > .05).monet.quick_map(cbar_kwargs=cbar_kwargs, figsize=(
-        11.31,  7.67), levels=levels, cmap='plasma')  # robust=True)
+    cbar_kwargs = dict(
+        aspect=30, shrink=.8, orientation='horizontal')  # dict(aspect=30)
+    levels = [
+        0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
+        2.5
+    ]
+    ax = da.where(da > .05).monet.quick_map(
+        cbar_kwargs=cbar_kwargs,
+        figsize=(11.31, 7.67),
+        levels=levels,
+        cmap='plasma')  # robust=True)
     date = pd.Timestamp(da.time.values)
     if df is not None:
         cbar = ax.figure.get_axes()[1]
@@ -63,22 +66,31 @@ def make_spatial_plot(da, df, out_name):
         vars = df.keys()
         varname = [x for x in vars if x not in ['latitude', 'longitude']][0]
         odf = df.dropna(subset=['latitude', 'longitude', varname])
-        odf.plot.scatter(x='longitude', y='latitude', c=varname, colorbar=False, vmin=0.05,
-                         vmax=2.5, s=30, edgecolor='w', linewidth=.08, cmap='plasma', ax=ax)
+        odf.plot.scatter(
+            x='longitude',
+            y='latitude',
+            c=varname,
+            colorbar=False,
+            vmin=0.05,
+            vmax=2.5,
+            s=30,
+            edgecolor='w',
+            linewidth=.08,
+            cmap='plasma',
+            ax=ax)
     plt.tight_layout(pad=0)
-    savename = {}.{}.{}.format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
-    monet.plots.savefig(date.strftime(savename, dpi=100)
-                        plt.close()
+    savename = "{}.{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
+    monet.plots.savefig(savename, dpi=100)
+    plt.close()
 
 
-                        def make_spatial_bias_plot(df, out_name, **kwargs):
-                        ax=plots.sp_scatter_bias(df, **kwargs)
-                        date=df.time.min()
-                        plt.title(date.strftime(
-                            'time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
-                        plt.tight_layout(pad=0)
-                        savename={}.{}.format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
-                        monet.plots.savefig(savename, dpi=100), decorate=True)
+def make_spatial_bias_plot(df, out_name, **kwargs):
+    ax = plots.sp_scatter_bias(df, **kwargs)
+    date = df.time.min()
+    plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
+    plt.tight_layout(pad=0)
+    savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
+    monet.plots.savefig(savename, dpi=100, decorate=True)
     plt.close()
 
 
@@ -87,14 +99,14 @@ def make_plots(finput, df, variable, obs_variable, out_name):
     plots = []
     for index, var in enumerate(variable):
         obj = f[var]
-    # loop over time
+        # loop over time
         for t in obj.time:
             date = pd.Timestamp(t.values)
             print(date)
             if df is not None:
-                odf = df.loc[df.time == pd.Timestamp(
-                    t.values), ['latitude', 'longitude', obs_variable[index]]]
-            name = {}.{}.format(out_name, obj.name)
+                odf = df.loc[df.time == pd.Timestamp(t.values),
+                             ['latitude', 'longitude', obs_variable[index]]]
+            name = "{}.{}".format(out_name, obj.name)
             make_spatial_plot(obj.sel(time=t), odf, name)
             make_spatial_bias_plot(df, name)
 
@@ -121,6 +133,7 @@ def make_plots(finput, df, variable, obs_variable, out_name):
 #     savefig(savename, dpi=100)
 #     plt.close()
 
+
 def get_df_region(obj, region):
     from monet.util.tools import get_giorgi_region_df as ggrd
     if region.lower() == 'global':
@@ -136,31 +149,63 @@ def get_region(obj, region):
         return obj
     else:
         latmin, lonmin, latmax, lonmax, acro = ggrb(acronym=region.upper())
-        out = obj.monet.window(lat_min=latmin, lon_min=lonmin,
-                               lat_max=latmax, lon_max=lonmax)
+        out = obj.monet.window(
+            lat_min=latmin, lon_min=lonmin, lat_max=latmax, lon_max=lonmax)
         return out
 
 
 if __name__ == '__main__':
 
-    parser = ArgumentParser(description='Make Spatial Plots for each time step in files',
-                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser = ArgumentParser(
+        description='Make Spatial Plots for each time step in files',
+        formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '-f', '--files', help='input file names', type=str, required=True)
     parser.add_argument(
-        '-p', '--paired_data', help='paired data input file names', type=str, required=False)
+        '-p',
+        '--paired_data',
+        help='paired data input file names',
+        type=str,
+        required=False)
     parser.add_argument(
-        '-v', '--variable', nargs='+', help='variable name to plot', required=True)
+        '-v',
+        '--variable',
+        nargs='+',
+        help='variable name to plot',
+        required=True)
     parser.add_argument(
-        '-v2', '--obs_variable', nargs='+', help='input file names', required=False)
-    parser.add_argument('-vb', '--verbose', help='print debugging information',
-                        action='store_true', required=False)
-    parser.add_argument('-r', '--region', help='GIORGI Region ACRONYM',
-                        nargs='+', required=False, default='global')
-    parser.add_argument('-n', '--output_name', help='Output base name',
-                        type=str, required=False, default='')
-    parser.add_argument('-d', '--daily', help='Resample to daily average',
-                        type=bool, required=False, default=False)
+        '-v2',
+        '--obs_variable',
+        nargs='+',
+        help='input file names',
+        required=False)
+    parser.add_argument(
+        '-vb',
+        '--verbose',
+        help='print debugging information',
+        action='store_true',
+        required=False)
+    parser.add_argument(
+        '-r',
+        '--region',
+        help='GIORGI Region ACRONYM',
+        nargs='+',
+        required=False,
+        default='global')
+    parser.add_argument(
+        '-n',
+        '--output_name',
+        help='Output base name',
+        type=str,
+        required=False,
+        default='')
+    parser.add_argument(
+        '-d',
+        '--daily',
+        help='Resample to daily average',
+        type=bool,
+        required=False,
+        default=False)
     args = parser.parse_args()
 
     finput = args.files
@@ -191,7 +236,7 @@ if __name__ == '__main__':
         if df is not None:
             df = df.resample('D').mean()
 
-    outname = {}.{}.format(out_name, region)
+    outname = "{}.{}".format(out_name, region)
 
     # make the plots
     make_plots(ds, df, variable, obs_variable, verbose, outname)
