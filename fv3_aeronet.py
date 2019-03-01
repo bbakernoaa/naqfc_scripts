@@ -108,7 +108,8 @@ def make_plots(f, df, variable, obs_variable, out_name):
                              ['latitude', 'longitude', obs_variable[index]]]
             name = "{}.{}".format(out_name, obj.name)
             make_spatial_plot(obj.sel(time=t), odf, name)
-            make_spatial_bias_plot(df, name)
+            if df is not None:
+                make_spatial_bias_plot(df, name)
 
 
 # def make_boxplot_giorgi(paired_data, savename):
