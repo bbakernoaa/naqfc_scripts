@@ -238,10 +238,11 @@ if __name__ == '__main__':
         df = None
     if daily:
         ds = ds.resample(time='D').mean()
+        outname = "{}.{}.{}".format(out_name, 'daily', region)
         if df is not None:
             df = df.resample('D').mean()
-
-    outname = "{}.{}".format(out_name, region)
+    else:
+        outname = "{}.{}".format(out_name, region)
 
     # make the plots
     make_plots(ds, df, variable, obs_variable, outname)
