@@ -197,7 +197,7 @@ if __name__ == '__main__':
         help='Output base name',
         type=str,
         required=False,
-        default='')
+        default='FV3CHEM')
     parser.add_argument(
         '-d',
         '--daily',
