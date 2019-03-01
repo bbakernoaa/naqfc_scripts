@@ -94,7 +94,7 @@ def make_spatial_bias_plot(df, out_name, **kwargs):
     plt.close()
 
 
-def make_plots(finput, df, variable, obs_variable, out_name):
+def make_plots(f, df, variable, obs_variable, out_name):
     # loop over varaible list
     plots = []
     for index, var in enumerate(variable):
