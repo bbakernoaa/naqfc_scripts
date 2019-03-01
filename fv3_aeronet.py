@@ -59,7 +59,7 @@ def make_spatial_plot(da, df, out_name):
     ]
     ax = da.where(da > .05).monet.quick_map(
         cbar_kwargs=cbar_kwargs,
-        figsize=(11.31, 7.67),
+        figsize=(11.31, 6.5),
         levels=levels,
         cmap='cividis')  # robust=True)
     date = pd.Timestamp(da.time.values)
