@@ -220,7 +220,7 @@ if __name__ == '__main__':
     obs_variable = args.obs_variable
     out_name = args.output_name
     daily = args.daily
-    region = str(args.region)
+    region = str(args.region[0])
 
     # open fv3chem
     obj = open_fv3chem(finput)
