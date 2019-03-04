@@ -186,7 +186,7 @@ if __name__ == '__main__':
         help='variable name to plot',
         required=True)
     parser.add_argument(
-        '-v2',
+        '-vp',
         '--obs_variable',
         nargs='+',
         help='input file names',
