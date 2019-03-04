@@ -52,14 +52,14 @@ def load_paired_data(fname):
 
 def make_spatial_plot(da, df, out_name):
     cbar_kwargs = dict(
-        aspect=20, shrink=.8, orientation='horizontal')  # dict(aspect=30)
+        aspect=30, shrink=.8, orientation='horizontal')  # dict(aspect=30)
     levels = [
-        0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
+        0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
         2.5
     ]
     ax = da.where(da > .05).monet.quick_map(
         cbar_kwargs=cbar_kwargs,
-        figsize=(11.31, 6.5),
+        figsize=(11, 6.5),
         levels=levels,
         cmap='cividis')  # robust=True)
     date = pd.Timestamp(da.time.values)
@@ -84,7 +84,7 @@ def make_spatial_plot(da, df, out_name):
     plt.tight_layout(pad=0)
     savename = "{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
     print(savename)
-    monet.plots.savefig(savename, dpi=100, decorate=True)
+    monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
     plt.close()
 
 
@@ -197,7 +197,7 @@ if __name__ == '__main__':
         help='GIORGI Region ACRONYM',
         nargs='+',
         required=False,
-        default='global')
+        default=['global'])
     parser.add_argument(
         '-n',
         '--output_name',
@@ -226,8 +226,9 @@ if __name__ == '__main__':
     obj = open_fv3chem(finput)
 
     # get the region if specified
+    print('region', region)
     ds = get_region(obj, region)
-
+    print(ds)
     # load the paired data
     if paired_data is not None:
         df = load_paired_data(paired_data)
