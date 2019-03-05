@@ -88,15 +88,15 @@ def make_spatial_plot(da, df, out_name):
     plt.close()
 
 
-def make_spatial_bias_plot(df, out_name, **kwargs):
-    ax = plots.sp_scatter_bias(df, **kwargs)
-    date = df.time.min()
-    plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
-    plt.tight_layout(pad=0)
-    savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
-    print(savename)
-    monet.plots.savefig(savename, dpi=100, decorate=True)
-    plt.close()
+# def make_spatial_bias_plot(df, out_name, **kwargs):
+#     ax = monet.plots.sp_scatter_bias(df, **kwargs)
+#     date = df.time.min()
+#     plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
+#     plt.tight_layout(pad=0)
+#     savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
+#     print(savename)
+#     monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
+#     plt.close()
 
 
 def make_plots(f, df, variable, obs_variable, out_name):
@@ -118,8 +118,8 @@ def make_plots(f, df, variable, obs_variable, out_name):
                 odf = None
             name = "{}.{}".format(out_name, obj.name)
             make_spatial_plot(obj.sel(time=t), odf, name)
-            if df is not None:
-                make_spatial_bias_plot(df, name)
+            # if df is not None:
+            #     make_spatial_bias_plot(df, name)
 
 
 # def make_boxplot_giorgi(paired_data, savename):
@@ -148,6 +148,7 @@ def make_plots(f, df, variable, obs_variable, out_name):
 def get_df_region(obj, region):
     from monet.util.tools import get_giorgi_region_df as ggrd
     if region.lower() == 'global':
+        obj['GIORGI_ACRO'] = 'global'
         return obj
     else:
         obj = ggrd(region)
@@ -159,7 +160,7 @@ def get_region(obj, region):
     if region.lower() == 'global':
         return obj
     else:
-        print(region.upper())
+        # print(region.upper())
         latmin, lonmin, latmax, lonmax, acro = ggrb(acronym=region.upper())
         out = obj.monet.window(
             lat_min=latmin, lon_min=lonmin, lat_max=latmax, lon_max=lonmax)
@@ -226,13 +227,13 @@ if __name__ == '__main__':
     obj = open_fv3chem(finput)
 
     # get the region if specified
-    print('region', region)
+    # print('region', region)
     ds = get_region(obj, region)
-    print(ds)
+    # print(ds)
     # load the paired data
     if paired_data is not None:
         df = load_paired_data(paired_data)
-        df = get_df_region(df)  # only the correct region
+        df = get_df_region(df, region)  # only the correct region
     else:
         df = None
     if daily:
