@@ -50,31 +50,6 @@ def load_paired_data(fname):
     return pd.read_hdf(fname)
 
 
-def make_spatial_bias_plot(df,
-                           out_name,
-                           col1='aod_550nm',
-                           col2='pm25aod550',
-                           date=None,
-                           **kwargs):
-    ax = monet.plots.sp_scatter_bias(df, col1=col1, col2=col2, **kwargs)
-    # date = df.time.min()
-    date = pd.Timestamp(date)
-    plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
-    plt.tight_layout(pad=0)
-    savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
-    print(savename)
-    monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
-    plt.close()
-
-
-def make_taylor_diagram(df, col1, col2, savename):
-    dia = monet.plots.plots.taylordiagram(df, col1=col1, col2=col2)
-    date = df.time.min()
-    name = "{}.{}".format(savename, date.strftime('tyr.%Y%m%d%H.jpg'))
-    print(name)
-    monet.plots.savefig(name, bbox_inches='tight', dpi=100, decorate=True)
-
-
 def make_plots(df, variable, obs_variable, out_name):
     # loop over varaible list
     print(variable, obs_variable)
@@ -82,10 +57,9 @@ def make_plots(df, variable, obs_variable, out_name):
         # loop over time
         if 'global' in out_name:
             name = "{}.{}".format(out_name, v)
-            make_boxplot_giorgi(df, name, col1=obsv, col2=v)
-            make_taylor_diagram(df, col1=obsv, col2=v, savename=name)
-            print(df.keys())
             odf = df.dropna(subset=[obsv, v])
+            make_boxplot_giorgi(df, name, col1=obsv, col2=v)
+
         for t in odf.time.unique():
             date = pd.Timestamp(t)
             print(
