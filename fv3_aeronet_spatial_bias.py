@@ -54,23 +54,17 @@ def make_spatial_bias_plot(df,
                            out_name,
                            col1='aod_550nm',
                            col2='pm25aod550',
+                           date=None,
                            **kwargs):
     ax = monet.plots.sp_scatter_bias(df, col1=col1, col2=col2, **kwargs)
-    date = df.time.min()
+    # date = df.time.min()
+    date = pd.Timestamp(date)
     plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
     plt.tight_layout(pad=0)
     savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
     print(savename)
     monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
     plt.close()
-
-
-def make_taylor_diagram(df, col1, col2, savename):
-    dia = monet.plots.plots.taylordiagram(df, col1=col1, col2=col2)
-    date = df.time.min()
-    name = "{}.{}".format(savename, date.strftime('tyr.%Y%m%d%H.jpg'))
-    print(name)
-    monet.plots.savefig(name, bbox_inches='tight', dpi=100, decorate=True)
 
 
 def make_plots(df, variable, obs_variable, out_name):
@@ -80,8 +74,6 @@ def make_plots(df, variable, obs_variable, out_name):
         # loop over time
         if 'global' in out_name:
             name = "{}.{}".format(out_name, v)
-            make_boxplot_giorgi(df, name, col1=obsv, col2=v)
-            make_taylor_diagram(df, col1=obsv, col2=v, savename=name)
             print(df.keys())
             odf = df.dropna(subset=[obsv, v])
         for t in odf.time.unique():
@@ -94,37 +86,17 @@ def make_plots(df, variable, obs_variable, out_name):
             odf = odf.loc[df.time ==
                           date, ['time', 'latitude', 'longitude', obsv, v]]
             name = "{}.{}".format(out_name, v)
-            make_spatial_bias_plot(
-                odf, name, cmap='RdBu_r', edgecolor='k', linewidth=.8)
-
-
-def make_boxplot_giorgi(
-        df,
-        savename,
-        col1='aod_550nm',
-        col2='pm25aod550',
-):
-    from monet.util.tools import get_giorgi_region_df as ggrd
-    from monet.plots import savefig
-    import seaborn as sns
-    print(df.head())
-    df = ggrd(df)
-    # dfa = df.dropna(subset=[col1, col2])[col1, 'GIORGI_ACRO']
-    # dfm = df.dropna(subset=[col1, col2])[col2, 'GIORGI_ACRO']
-    dfa = df[[col1, 'GIORGI_ACRO']]
-    dfm = df[[col2, 'GIORGI_ACRO']]
-    dfa['Legend'] = 'AERONET'
-    dfm['Legend'] = 'FV3CHEM'
-    dfa.rename({col1: 'AOD'}, axis=1, inplace=True)
-    dfm.rename({col2: 'AOD'}, axis=1, inplace=True)
-    dfn = pd.concat([dfa, dfm], ignore_index=True)
-    f, ax = plt.subplots(figsize=(12, 7))
-    sns.boxplot(ax=ax, x='GIORGI_ACRO', y='AOD', hue='Legend', data=dfn)
-    sns.despine()
-    plt.tight_layout(pad=0)
-    name = "{}.bp.jpg".format(savename)
-    monet.plots.savefig(name, bbox_inches='tight', dpi=100, decorate=True)
-    plt.close()
+            print(t)
+            if ~odf.empty:
+                make_spatial_bias_plot(
+                    odf,
+                    name,
+                    col1=obsv,
+                    col2=v,
+                    date=t,
+                    cmap='RdBu_r',
+                    edgecolor='k',
+                    linewidth=.8)
 
 
 def get_df_region(obj, region):
