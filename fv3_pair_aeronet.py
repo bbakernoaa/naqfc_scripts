@@ -131,16 +131,16 @@ if __name__ == '__main__':
     #pairs surface point-type observations with 2D model parameters
 
     mapping_table = {
-        'aod_550nm': 'pm25aod550',
-        'aod_550nm': 'dust25aod550',
-        'aod_550nm': 'salt25aod550',
-        'aod_550nm': 'sulf25aod550',
-        'aod_550nm': 'oc25aod550',
-        'aod_550nm': 'bc25aod550'
+        'pm25aod550': 'aod_550nm',
+        'dust25aod550': 'aod_550nm',
+        'salt25aod550': 'aod_550nm',
+        'sulf25aod550': 'aod_550nm',
+        'oc25aod550': 'aod_550nm',
+        'bc25aod550': 'aod_550nm'
     }
     dfpair = pair_point(da, df, mapping_table, interp)
-    dfpair = dfpair.dropna(subset=['aod_550nm', 'pm25aod550'])
-    #    print(dfpair.head())
+    # dfpair = dfpair.dropna(subset=['aod_550nm', 'pm25aod550'])
+    print(dfpair.head())
     dfpair.to_hdf(output, 'df', format='table')
 
     sys.exit(0)

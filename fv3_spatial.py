@@ -52,16 +52,16 @@ def load_paired_data(fname):
 
 def make_spatial_plot(da, df, out_name):
     cbar_kwargs = dict(
-        aspect=30, shrink=.8, orientation='horizontal')  # dict(aspect=30)
+        aspect=40, pad=0.01, orientation='horizontal')  # dict(aspect=30)
     levels = [
-        0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
+        0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
         2.5
     ]
-    ax = da.where(da > .05).monet.quick_map(
+    ax = da.squeeze().monet.quick_map(
         cbar_kwargs=cbar_kwargs,
-        figsize=(11, 6.5),
+        figsize=(11, 6.9),
         levels=levels,
-        cmap='cividis')  # robust=True)
+        cmap='Spectral_r')  # robust=True)
     date = pd.Timestamp(da.time.values)
     if df is not None:
         cbar = ax.figure.get_axes()[1]
@@ -79,24 +79,27 @@ def make_spatial_plot(da, df, out_name):
             s=30,
             edgecolor='w',
             linewidth=.08,
-            cmap='plasma',
+            cmap='Spectral_r',
             ax=ax)
     plt.tight_layout(pad=0)
     savename = "{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
     print(savename)
-    monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
+    monet.plots.savefig(savename, dpi=100, decorate=True)
     plt.close()
 
 
-# def make_spatial_bias_plot(df, out_name, **kwargs):
-#     ax = monet.plots.sp_scatter_bias(df, **kwargs)
-#     date = df.time.min()
-#     plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
-#     plt.tight_layout(pad=0)
-#     savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
-#     print(savename)
-#     monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
-#     plt.close()
+# make viirs aod plots
+def make_viirs_aod_plots(ds, out_name, df=None):
+    dsm = ds.resample(time='D').mean()
+    outname = "{}.{}".format(out_name, 'daily')
+    # viirs = monet.sat.nesdis_eps_viirs.open_mfdataset(dsm.time.to_index())
+    for t in dsm.time:
+        make_spatial_plot(dsm.sel(time=t), df, out_name=outname)
+        v = outname.split('.')
+        v[0] = 'VIIRSEPS'
+        vname = sting.join(v)
+        viirs = monet.sat.nesdis_eps_viirs.open_dataset(t.values)
+        make_spatial_plot(viirs.squeeze(), df, out_name=vname)
 
 
 def make_plots(f, df, variable, obs_variable, out_name):
@@ -229,6 +232,7 @@ if __name__ == '__main__':
     # get the region if specified
     # print('region', region)
     ds = get_region(obj, region)
+    outname = "{}.{}".format(out_name, region)
     # print(ds)
     # load the paired data
     if paired_data is not None:
@@ -236,13 +240,7 @@ if __name__ == '__main__':
         df = get_df_region(df, region)  # only the correct region
     else:
         df = None
-    if daily:
-        ds = ds.resample(time='D').mean()
-        outname = "{}.{}.{}".format(out_name, 'daily', region)
-        if df is not None:
-            df = df.resample('D').mean()
-    else:
-        outname = "{}.{}".format(out_name, region)
 
     # make the plots
     make_plots(ds, df, variable, obs_variable, outname)
+    make_viirs_aod_plots(ds.pm25aod550, out_name, df=None)
