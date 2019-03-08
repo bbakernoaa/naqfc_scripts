@@ -89,17 +89,24 @@ def make_spatial_plot(da, df, out_name):
 
 
 # make viirs aod plots
-def make_viirs_aod_plots(ds, out_name, df=None):
-    dsm = ds.resample(time='D').mean()
+def make_daily_plots(ds, out_name, df=None):
+    dsm = ds.resample(time='D').mean('time')
     outname = "{}.{}".format(out_name, 'daily')
     # viirs = monet.sat.nesdis_eps_viirs.open_mfdataset(dsm.time.to_index())
     for t in dsm.time:
-        make_spatial_plot(dsm.sel(time=t), df, out_name=outname)
+        name = "{}.{}".format(outname, dsm.name)
+        make_spatial_plot(dsm.sel(time=t), df, out_name=name)
+
+
+def make_viirs_aod_plots(ds, out_name, df=None):
+    # dsm = ds.resample(time='D').mean('time')
+    outname = "{}.{}".format(out_name, 'daily')
+    # viirs = monet.sat.nesdis_eps_viirs.open_mfdataset(dsm.time.to_index())
+    for t in ds.time:
         v = outname.split('.')
-        v[0] = 'VIIRSEPS'
-        vname = sting.join(v)
-        viirs = monet.sat.nesdis_eps_viirs.open_dataset(t.values)
-        make_spatial_plot(viirs.squeeze(), df, out_name=vname)
+        v[0] = 'VIIRSEPS.'
+        vname = "".join(v)
+        make_spatial_plot(ds.sel(time=t), df, out_name=vname)
 
 
 def make_plots(f, df, variable, obs_variable, out_name):
@@ -232,6 +239,9 @@ if __name__ == '__main__':
     # get the region if specified
     # print('region', region)
     ds = get_region(obj, region)
+    viirs = monet.sat.nesdis_eps_viirs.open_mfdataset(
+        ds.resample(time='D').mean('time').time.to_index())
+    viirs = get_region(viirs, region)
     outname = "{}.{}".format(out_name, region)
     # print(ds)
     # load the paired data
@@ -243,4 +253,6 @@ if __name__ == '__main__':
 
     # make the plots
     make_plots(ds, df, variable, obs_variable, outname)
-    make_viirs_aod_plots(ds.pm25aod550, out_name, df=None)
+    for i in variable:
+        make_daily_plots(ds[i], out_name, df=None)
+    make_viirs_aod_plots(viirs, out_name)

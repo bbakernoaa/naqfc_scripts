@@ -5,6 +5,7 @@
 #module use -a /gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/modulefiles
 #module load anaconda3/latest
 
+export OMP_NUM_THREADS=2
 #get the current date
 yyyymmdd=$(date +%Y%m%d)
 yyyymmdd='20190203'
@@ -13,9 +14,36 @@ yyyymmdd='20190203'
 data_dir=/gpfs/hps2/ptmp/Barry.Baker/fengsha/gfs.$yyyymmdd/00
 cd data_dir
 
+#grib files
+files="gfs.t00z.master.grb2f???.entire_atm.nc"
+
+#convert files
+ls -t ${files} | xargs -I {} --max-procs 10 fv3grib2nc4.py -f {}
+
+#spatial plotting
+spatial=/gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/naqfc_scripts/fv3_spatial.py
+pair=/gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/naqfc_scripts/fv3_pair_aeronet.py
+box=/gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/naqfc_scripts/fv3_aeronet_box.py
+bias=/gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/naqfc_scripts/fv3_aeronet_spatial_bias.py
+taylor=/gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/naqfc_scripts/fv3_aeronet_taylor.py
+
 #make spatial plots for all regions
 for i in 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   echo ${i}
-done | xargs -I {} ./fv3_spatial.py -f "gfs.t00z.master.grb2f???.entire_atm.nc" -v pm25aod550 salt25aod550 dust25aod550 sulf25aod550 bc25aod550 oc25aod550
+done | xargs -I {} --max-procs 5 ./${spatial} -f ${files} -v pm25aod550 salt25aod550 dust25aod550 sulf25aod550 bc25aod550 oc25aod550
 
-#
+#pair the data
+./${pair} -f ${files} -o fv3chem_aeronet.hdf
+
+#create spatial bias plots
+for i in 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
+  echo ${i}
+done | xargs -I {} --max-procs 5 ./${bias} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
+
+#create box plot
+./${box} -p fv3chem_aeronet.hdf
+
+#create fv3_aeronet_taylor
+for i in 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
+  echo ${i}
+done | xargs -I {} --max-procs 5 ./${taylor} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
