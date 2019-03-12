@@ -48,6 +48,8 @@ for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'M
   echo ${i}
 done | xargs -I {} --max-procs 5 ${taylor} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
 
+# make GIFS
+##########################################################################################################
 for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   for j in 'pm25aod550' 'salt25aod550' 'dust25aod550' 'sulf25aod550' 'bc25aod550' 'oc25aod550'; do
     echo "${i}.${j}"
@@ -59,7 +61,9 @@ for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'M
     echo "${i}.${j}"
   done
 done | xargs -I {} --max-procs 10 convert -delay 40 -loop 0 {} FV3CHEM.{}.sb*.jpg FV3CHEM.{}.sb.gif
+##########################################################################################################
 
 # Transfer data back to aaqest
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ls -t *.jpg | xargs -I {} --max-procs 4 scp {} barryb@aaqest.arl.noaa.gov:/data/aqf2/testbed-bak/www/testbed/TCHAI/hkim/${yyyymmdd}/
 ls -t *.gif | xargs -I {} --max-procs 4 scp {} barryb@aaqest.arl.noaa.gov:/data/aqf2/testbed-bak/www/testbed/TCHAI/hkim/${yyyymmdd}/

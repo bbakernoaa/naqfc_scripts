@@ -33,6 +33,8 @@ plt.ioff()
 Simple utility to make spatial plots from the NAQFC forecast and overlay observations
 '''
 
+initial_datetime = None
+
 
 def chdir(fname):
     dir_path = os.path.dirname(os.path.realpath(fname))
@@ -63,6 +65,8 @@ def make_spatial_plot(da, df, out_name):
         levels=levels,
         cmap='Spectral_r')  # robust=True)
     date = pd.Timestamp(da.time.values)
+    dt = date - initial_datetime
+    dtstr = str(dt.days*24 + dt.seconds // 3600 -).zfill(3)
     if df is not None:
         cbar = ax.figure.get_axes()[1]
         vmin, vmax = cbar.get_ybound()
@@ -82,7 +86,9 @@ def make_spatial_plot(da, df, out_name):
             cmap='Spectral_r',
             ax=ax)
     plt.tight_layout(pad=0)
-    savename = "{}.{}".format(out_name, date.strftime('sp.%Y%m%d%H.jpg'))
+    savename = "{}.{}.{}.jpg".format(out_name,
+                                     initial_datetime.strftime('sp.%Y%m%d'),
+                                     dtstr)
     print(savename)
     monet.plots.savefig(savename, dpi=100, decorate=True)
     plt.close()
@@ -104,8 +110,8 @@ def make_viirs_aod_plots(ds, out_name, df=None):
     # viirs = monet.sat.nesdis_eps_viirs.open_mfdataset(dsm.time.to_index())
     for t in ds.time:
         v = outname.split('.')
-        v[0] = 'VIIRSEPS.'
-        vname = "".join(v)
+        v[0] = 'VIIRSEPS'
+        vname = ".".join(v)
         make_spatial_plot(ds.sel(time=t), df, out_name=vname)
 
 
@@ -130,29 +136,6 @@ def make_plots(f, df, variable, obs_variable, out_name):
             make_spatial_plot(obj.sel(time=t), odf, name)
             # if df is not None:
             #     make_spatial_bias_plot(df, name)
-
-
-# def make_boxplot_giorgi(paired_data, savename):
-#     from monet.util.tools import get_giorgi_region_df as ggrd
-#     from monet.plots import savefig
-#     import seaborn as sns
-#     df=paird_data.copy()
-#     df=ggrd(df)
-#     dfa=df.dropna(subset = ['aod_550nm', 'pm25aod550'])[
-#         'aod_550nm', 'GIORGI_ACRO']
-#     dfm= df.dropna(subset=['aod_550nm', 'pm25aod550'])[
-#         'pm25aod550', 'GIORGI_ACRO']
-#     dfa['Legend']= 'AERONET'
-#     dfm['Legend']= 'FV3CHEM'
-#     dfa.rename({'aod_550nm': 'AOD'}, axis=1, inplace=True)
-#     dfm.rename({'pm25aod550': 'AOD'}, axis=1, inplace=True)
-#     dfn= pd.concat([dfa, dfm], ignore_index=True)
-#     f, ax= plt.subplots(figsize=(12, 7))
-#     sns.boxplot(ax=ax, x='GIORGI_ACRO', y='AOD', hue='Legend', data=dfn)
-#     sns.despine()
-#     plt.tight_layout(pad=0)
-#     savefig(savename, dpi=100)
-#     plt.close()
 
 
 def get_df_region(obj, region):
@@ -252,7 +235,9 @@ if __name__ == '__main__':
         df = None
 
     # make the plots
+    initial_datetime = pd.Timestamp(ds.time.to_index()[0])
     make_plots(ds, df, variable, obs_variable, outname)
     for i in variable:
-        make_daily_plots(ds[i], out_name, df=None)
-    make_viirs_aod_plots(viirs, out_name)
+        make_daily_plots(ds[i], outname, df=None)
+    if region == 'global':
+        make_viirs_aod_plots(viirs, outname)

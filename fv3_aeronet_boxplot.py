@@ -103,7 +103,7 @@ def make_boxplot_giorgi(
     dfa.rename({col1: 'AOD'}, axis=1, inplace=True)
     dfm.rename({col2: 'AOD'}, axis=1, inplace=True)
     dfn = pd.concat([dfa, dfm], ignore_index=True)
-    f, ax = plt.subplots(figsize=(12, 7))
+    f, ax = plt.subplots(figsize=(10, 4))
     sns.boxplot(ax=ax, x='GIORGI_ACRO', y='AOD', hue='Legend', data=dfn)
     sns.despine()
     plt.tight_layout(pad=0)

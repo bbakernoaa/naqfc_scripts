@@ -33,6 +33,8 @@ plt.ioff()
 Simple utility to make spatial plots from the NAQFC forecast and overlay observations
 '''
 
+initial_datetime = None
+
 
 def chdir(fname):
     dir_path = os.path.dirname(os.path.realpath(fname))
@@ -56,12 +58,18 @@ def make_spatial_bias_plot(df,
                            col2='pm25aod550',
                            date=None,
                            **kwargs):
-    ax = monet.plots.sp_scatter_bias(df, col1=col1, col2=col2, **kwargs)
+    cbar_kwargs = dict(aspect=40, pad=0.01, orientation='horizontal')
+    ax = monet.plots.sp_scatter_bias(
+        df, col1=col1, col2=col2, cbar_kwargs=cbar_kwargs, **kwargs)
     # date = df.time.min()
     date = pd.Timestamp(date)
+    dt = date - initial_datetime
+    dtstr = str(dt.days * 24 + dt.seconds // 3600).zfill(3)
     plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
     plt.tight_layout(pad=0)
-    savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
+    savename = "{}.{}.{}.jpg".format(out_name,
+                                     initial_datetime.strftime('sp.%Y%m%d'),
+                                     dtstr)
     print(savename)
     monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
     plt.close()
@@ -165,5 +173,6 @@ if __name__ == '__main__':
 
     dfnew = get_df_region(dfnew, region)  # only the correct region
 
+    initial_datetime = df.time.min()
     # make the plots
     make_plots(df, variable, obs_variable, outname)
