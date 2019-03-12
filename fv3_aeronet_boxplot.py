@@ -60,28 +60,6 @@ def make_plots(df, variable, obs_variable, out_name):
             odf = df.dropna(subset=[obsv, v])
             make_boxplot_giorgi(df, name, col1=obsv, col2=v)
 
-        for t in odf.time.unique():
-            date = pd.Timestamp(t)
-            print(
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            print('Creating Plot:', v, 'at time:', date)
-            print(
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            odf = odf.loc[df.time ==
-                          date, ['time', 'latitude', 'longitude', obsv, v]]
-            name = "{}.{}".format(out_name, v)
-            print(t)
-            if ~odf.empty:
-                make_spatial_bias_plot(
-                    odf,
-                    name,
-                    col1=obsv,
-                    col2=v,
-                    date=t,
-                    cmap='RdBu_r',
-                    edgecolor='k',
-                    linewidth=.8)
-
 
 def make_boxplot_giorgi(
         df,
@@ -103,12 +81,13 @@ def make_boxplot_giorgi(
     dfa.rename({col1: 'AOD'}, axis=1, inplace=True)
     dfm.rename({col2: 'AOD'}, axis=1, inplace=True)
     dfn = pd.concat([dfa, dfm], ignore_index=True)
-    f, ax = plt.subplots(figsize=(10, 4))
+    f, ax = plt.subplots(figsize=(10, 5))
     sns.boxplot(ax=ax, x='GIORGI_ACRO', y='AOD', hue='Legend', data=dfn)
     sns.despine()
+    plt.legend(loc=2)
     plt.tight_layout(pad=0)
     name = "{}.bp.jpg".format(savename)
-    monet.plots.savefig(name, bbox_inches='tight', dpi=100, decorate=True)
+    monet.plots.savefig(name, dpi=100, loc=3, decorate=True)
     plt.close()
 
 

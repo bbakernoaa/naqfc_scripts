@@ -50,28 +50,14 @@ def load_paired_data(fname):
     return pd.read_hdf(fname)
 
 
-def make_spatial_bias_plot(df,
-                           out_name,
-                           col1='aod_550nm',
-                           col2='pm25aod550',
-                           date=None,
-                           **kwargs):
-    ax = monet.plots.sp_scatter_bias(df, col1=col1, col2=col2, **kwargs)
-    # date = df.time.min()
-    date = pd.Timestamp(date)
-    plt.title(date.strftime('time=%Y/%m/%d %H:00 | FV3 - AERONET (AOD)'))
-    plt.tight_layout(pad=0)
-    savename = "{}.{}".format(out_name, date.strftime('sb.%Y%m%d%H.jpg'))
-    print(savename)
-    monet.plots.savefig(savename, bbox_inches='tight', dpi=100, decorate=True)
-    plt.close()
-
-
 def make_taylor_diagram(df, col1, col2, savename):
-    dia = monet.plots.plots.taylordiagram(df, col1=col1, col2=col2)
+    dia = monet.plots.plots.taylordiagram(
+        df, col1=col1, col2=col2, label1='AERONET', label2='FV3CHEM-FENGSHA')
     date = df.time.min()
+    plt.legend(loc=(.8, .8))
     name = "{}.{}".format(savename, date.strftime('tyr.%Y%m%d%H.jpg'))
-    monet.plots.savefig(name, bbox_inches='tight', dpi=100, decorate=True)
+    monet.plots.savefig(
+        name, bbox_inches='tight', dpi=100, loc=3, decorate=True)
 
 
 def make_plots(df, variable, obs_variable, out_name):
