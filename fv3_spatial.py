@@ -34,6 +34,7 @@ Simple utility to make spatial plots from the NAQFC forecast and overlay observa
 '''
 
 initial_datetime = None
+name = None
 
 
 def chdir(fname):
@@ -54,7 +55,8 @@ def load_paired_data(fname):
 
 def make_spatial_plot(da, df, out_name):
     cbar_kwargs = dict(
-        aspect=40, pad=0.01, orientation='horizontal')  # dict(aspect=30)
+        aspect=40, pad=0.01, orientation='horizontal',
+        shrink=.9)  # dict(aspect=30)
     levels = [
         0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2,
         2.5
@@ -66,7 +68,10 @@ def make_spatial_plot(da, df, out_name):
         cmap='Spectral_r')  # robust=True)
     date = pd.Timestamp(da.time.values)
     dt = date - initial_datetime
-    dtstr = str(dt.days*24 + dt.seconds // 3600 -).zfill(3)
+    dtstr = str(dt.days * 24 + dt.seconds // 3600).zfill(3)
+    title = "{}{} | {}".format(name, date.strftime('%Y-%m-%d %H:00'), da.name)
+    plt.title(title)
+    print(title)
     if df is not None:
         cbar = ax.figure.get_axes()[1]
         vmin, vmax = cbar.get_ybound()
@@ -100,8 +105,8 @@ def make_daily_plots(ds, out_name, df=None):
     outname = "{}.{}".format(out_name, 'daily')
     # viirs = monet.sat.nesdis_eps_viirs.open_mfdataset(dsm.time.to_index())
     for t in dsm.time:
-        name = "{}.{}".format(outname, dsm.name)
-        make_spatial_plot(dsm.sel(time=t), df, out_name=name)
+        save_name = "{}.{}".format(outname, dsm.name)
+        make_spatial_plot(dsm.sel(time=t), df, out_name=save_name)
 
 
 def make_viirs_aod_plots(ds, out_name, df=None):
@@ -112,6 +117,7 @@ def make_viirs_aod_plots(ds, out_name, df=None):
         v = outname.split('.')
         v[0] = 'VIIRSEPS'
         vname = ".".join(v)
+        name = "{}  | ".format('VIIRS EPS')
         make_spatial_plot(ds.sel(time=t), df, out_name=vname)
 
 
@@ -132,8 +138,8 @@ def make_plots(f, df, variable, obs_variable, out_name):
                              ['latitude', 'longitude', obs_variable[index]]]
             else:
                 odf = None
-            name = "{}.{}".format(out_name, obj.name)
-            make_spatial_plot(obj.sel(time=t), odf, name)
+            save_name = "{}.{}".format(out_name, obj.name)
+            make_spatial_plot(obj.sel(time=t), odf, save_name)
             # if df is not None:
             #     make_spatial_bias_plot(df, name)
 
@@ -216,6 +222,8 @@ if __name__ == '__main__':
     daily = args.daily
     region = str(args.region[0])
 
+    # title name is outname to begin with
+    name = "{} | ".format(out_name)
     # open fv3chem
     obj = open_fv3chem(finput)
 

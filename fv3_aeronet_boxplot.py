@@ -58,15 +58,18 @@ def make_plots(df, variable, obs_variable, out_name):
         if 'global' in out_name:
             name = "{}.{}".format(out_name, v)
             odf = df.dropna(subset=[obsv, v])
-            make_boxplot_giorgi(df, name, col1=obsv, col2=v)
+            if "{}_new".format(v) in df:
+                make_boxplot_giorgi(
+                    df, name, col1=obsv, col2=v, col3="{}_new".format(v))
+            else:
+                make_boxplot_giorgi(df, name, col1=obsv, col2=v)
 
 
-def make_boxplot_giorgi(
-        df,
-        savename,
-        col1='aod_550nm',
-        col2='pm25aod550',
-):
+def make_boxplot_giorgi(df,
+                        savename,
+                        col1='aod_550nm',
+                        col2='pm25aod550',
+                        col3=None):
     from monet.util.tools import get_giorgi_region_df as ggrd
     from monet.plots import savefig
     import seaborn as sns
@@ -80,7 +83,13 @@ def make_boxplot_giorgi(
     dfm['Legend'] = 'FV3CHEM'
     dfa.rename({col1: 'AOD'}, axis=1, inplace=True)
     dfm.rename({col2: 'AOD'}, axis=1, inplace=True)
-    dfn = pd.concat([dfa, dfm], ignore_index=True)
+    if col3 is not None:
+        df3 = df[[col2, 'GIORGI_ACRO']]
+        df3['Legend'] = 'GSD-REALTIME'
+        df3.rename({col3: 'AOD'}, axis=1, inplace=True)
+        dfn = pd.concat([dfa, dfm, df3], ignore_index=True)
+    else:
+        dfn = pd.concat([dfa, dfm], ignore_index=True)
     f, ax = plt.subplots(figsize=(10, 5))
     sns.boxplot(ax=ax, x='GIORGI_ACRO', y='AOD', hue='Legend', data=dfn)
     sns.despine()

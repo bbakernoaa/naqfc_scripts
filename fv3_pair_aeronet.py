@@ -127,7 +127,10 @@ if __name__ == '__main__':
     # print(start.strftime('%Y%m%d%H'), end.strftime('%Y%m%d%H'))
     # print(start)
     # print(end)
-    df = get_aeronet(start, end)
+    if os.path.isfile(output):
+        df = pd.read_hdf(output)
+    else:
+        df = get_aeronet(start, end)
     #pairs surface point-type observations with 2D model parameters
 
     mapping_table = {

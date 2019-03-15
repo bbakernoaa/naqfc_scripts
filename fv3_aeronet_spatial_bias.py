@@ -162,6 +162,8 @@ if __name__ == '__main__':
     daily = args.daily
     region = str(args.region[0])
 
+    name = out_name
+
     df = load_paired_data(paired_data)
     if daily:
         df.index = df.time
