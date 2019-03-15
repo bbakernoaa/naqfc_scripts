@@ -5,14 +5,14 @@ module purge
 module use -a /gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/modulefiles
 module load anaconda3/latest
 
-export OMP_NUM_THREADS=2
+export OMP_NUM_THREADS=4
 # get the current date
 yyyymmdd=$(date +%Y%m%d)
 yyyymmdd='20190203'
 
 # go to data directory
 data_dir=/gpfs/hps2/ptmp/Barry.Baker/fengsha/gfs.$yyyymmdd/00
-cd data_dir
+cd $data_dir
 
 # grib files
 files="gfs.t00z.master.grb2f???.entire_atm.nc"
@@ -30,15 +30,16 @@ taylor=/gpfs/hps3/emc/naqfc/noscrub/Barry.Baker/naqfc_scripts/fv3_aeronet_taylor
 # make spatial plots for all regions
 for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   echo ${i}
-done | xargs -I {} --max-procs 10 ${spatial} -f ${files} -v pm25aod550 salt25aod550 dust25aod550 sulf25aod550 bc25aod550 oc25aod550
+done | xargs -I {} --max-procs 10 ${spatial} -f "gfs.t00z.master.grb2f???.entire_atm.nc" -v pm25aod550 salt25aod550 dust25aod550 sulf25aod550 bc25aod550 oc25aod550
 
 # pair the data
-${pair} -f ${files} -o fv3chem_aeronet.hdf
+printf '\n\n PAIRING DATA \n\n'
+${pair} -f "gfs.t00z.master.grb2f???.entire_atm.nc" -o fv3chem_aeronet.hdf
 
 # create spatial bias plots
 for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   echo ${i}
-done | xargs -I {} --max-procs 5 ${bias} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
+done | xargs -I {} --max-procs 10 ${bias} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
 
 # create box plot
 ${box} -p fv3chem_aeronet.hdf
@@ -46,24 +47,30 @@ ${box} -p fv3chem_aeronet.hdf
 # create fv3_aeronet_taylor
 for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   echo ${i}
-done | xargs -I {} --max-procs 5 ${taylor} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
+done | xargs -I {} --max-procs 10 ${taylor} -p fv3chem_aeronet.hdf -v pm25aod550 -vp aod_550nm
 
 # make GIFS
 ##########################################################################################################
 for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   for j in 'pm25aod550' 'salt25aod550' 'dust25aod550' 'sulf25aod550' 'bc25aod550' 'oc25aod550'; do
-    echo "${i}.${j}"
+    echo "FV3CHEM.${i}.${j}"
   done
-done | xargs -I {} --max-procs 10 convert -delay 40 -loop 0 {} FV3CHEM.{}.sp*.jpg FV3CHEM.{}.sp.gif
+done | xargs -I {} --max-procs 20 convert -delay 40 -loop 0 {} {}"*.sp.*.jpg" {}.sp.gif
 
 for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
   for j in 'pm25aod550' 'salt25aod550' 'dust25aod550' 'sulf25aod550' 'bc25aod550' 'oc25aod550'; do
-    echo "${i}.${j}"
+    echo "FV3CHEM.daily.${i}.${j}"
   done
-done | xargs -I {} --max-procs 10 convert -delay 40 -loop 0 {} FV3CHEM.{}.sb*.jpg FV3CHEM.{}.sb.gif
+done | xargs -I {} --max-procs 20 convert -delay 40 -loop 0 {} {}"*.sp.*.jpg" {}.sp.gif
+
+for i in 'global' 'NAU' 'SAU' 'AMZ' 'SSA' 'CAM' 'WNA' 'CNA' 'ENA' 'ALA' 'GRL' 'MED' 'NEU' 'WAF' 'EAF' 'SAF' 'SAH' 'SEA' 'EAS' 'SAS' 'CAS' 'TIB' 'NAS'; do
+  for j in 'pm25aod550' 'salt25aod550' 'dust25aod550' 'sulf25aod550' 'bc25aod550' 'oc25aod550'; do
+    echo "FV3CHEM.${i}.${j}"
+  done
+done | xargs -I {} --max-procs 20 convert -delay 40 -loop 0 {} {}"*.sb.*.jpg" {}.sp.gif
 ##########################################################################################################
 
 # Transfer data back to aaqest
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-ls -t *.jpg | xargs -I {} --max-procs 4 scp {} barryb@aaqest.arl.noaa.gov:/data/aqf2/testbed-bak/www/testbed/TCHAI/hkim/${yyyymmdd}/
-ls -t *.gif | xargs -I {} --max-procs 4 scp {} barryb@aaqest.arl.noaa.gov:/data/aqf2/testbed-bak/www/testbed/TCHAI/hkim/${yyyymmdd}/
+rsync -aHAXxv --numeric-ids --delete --progress -e "ssh -T" *.jpg barryb@aaqest.arl.noaa.gov:/data/aqf2/testbed-bak/www/testbed/TCHAI/hkim/${yyyymmdd}/
+rsync -aHAXxv --numeric-ids --delete --progress -e "ssh -T" *.gif barryb@aaqest.arl.noaa.gov:/data/aqf2/testbed-bak/www/testbed/TCHAI/hkim/${yyyymmdd}/
